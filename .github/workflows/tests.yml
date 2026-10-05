@@ -11,7 +11,7 @@ jobs:
       - name: Tap this checkout
         run: |
           mkdir -p "$(brew --repository)/Library/Taps/getpopcraft"
-          ln -s "$GITHUB_WORKSPACE" "$(brew --repository)/Library/Taps/getpopcraft/homebrew-tap"
+          ln -s "$GITHUB_WORKSPACE" "$(brew --repository)/Library/Taps/getpopcraft/homebrew-popcraft"
       - run: brew audit --strict --online getpopcraft/tap/popcraft
       - run: brew install --build-from-source getpopcraft/tap/popcraft
       - run: brew test getpopcraft/tap/popcraft

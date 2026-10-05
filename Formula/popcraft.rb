@@ -1,3 +1,7 @@
+# typed: false
+# frozen_string_literal: true
+
+# Installs the `popcraft` command line (@popcraft/cli from npm).
 class Popcraft < Formula
   desc "Command-line for PopCraft: edit .popcraft files, call the API, publish plugins"
   homepage "https://popcraft.app/docs/api/cli"
