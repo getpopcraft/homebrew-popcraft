@@ -1,0 +1,17 @@
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  formula:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Tap this checkout
+        run: |
+          mkdir -p "$(brew --repository)/Library/Taps/getpopcraft"
+          ln -s "$GITHUB_WORKSPACE" "$(brew --repository)/Library/Taps/getpopcraft/homebrew-tap"
+      - run: brew audit --strict --online getpopcraft/tap/popcraft
+      - run: brew install --build-from-source getpopcraft/tap/popcraft
+      - run: brew test getpopcraft/tap/popcraft
