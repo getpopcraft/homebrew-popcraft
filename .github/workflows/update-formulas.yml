@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # run Tests on the new formula (a push with GITHUB_TOKEN starts no workflow)
 
 jobs:
   bump:
@@ -66,7 +67,6 @@ jobs:
           class Popcraft < Formula
             desc "Command-line for PopCraft: edit .popcraft files, call the API, publish plugins"
             homepage "https://popcraft.app/docs/api/cli"
-            version "VERSION_PLACEHOLDER"
             license "MIT"
 
             on_macos do
@@ -125,3 +125,8 @@ jobs:
             git commit -m "popcraft ${VERSION}"
             git push
           fi
+
+      - name: Test the formula on every platform
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run tests.yml -R "$GITHUB_REPOSITORY" --ref main
