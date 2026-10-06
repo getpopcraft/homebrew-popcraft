@@ -6,7 +6,6 @@
 class Popcraft < Formula
   desc "Command-line for PopCraft: edit .popcraft files, call the API, publish plugins"
   homepage "https://popcraft.app/docs/api/cli"
-  version "0.6.0"
   license "MIT"
 
   on_macos do
