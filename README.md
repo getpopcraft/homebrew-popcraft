@@ -22,7 +22,7 @@ Or in one step: `brew install getpopcraft/popcraft/popcraft`.
 
 ## Releases
 
-The PopCraft release dispatches `release` with `{ version }` to this repo after npm publishes the CLI;
-`Update formulas` downloads the tarball, computes its SHA256 and commits. Run it by hand from Actions with a
-version to re-bump. Homebrew only installs npm packages a day old, so a new version installs about 24 hours
-after its release.
+The PopCraft release compiles the CLI with bun for macOS and Linux (arm64 and x64), attaches the binaries to a
+`v<version>` release here, and dispatches `release` with `{ version }`. `Update formulas` downloads them, computes
+their SHA256 and regenerates `Formula/popcraft.rb`. Run it by hand from Actions with a version to regenerate.
+npm publishes the same CLI separately, as `@popcraft/cli`.

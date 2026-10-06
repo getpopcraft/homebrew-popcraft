@@ -1,15 +1,16 @@
 name: Update formulas
 
-# Point Formula/popcraft.rb at a published @popcraft/cli: read its npm tarball, compute SHA256, and commit.
+# Regenerate Formula/popcraft.rb for a PopCraft CLI release: download the binaries attached to this repo's v<version>
+# release, compute SHA256, and commit. The release and the dispatch come from the PopCraft release
+# (getpopcraft/popcraft-app, .github/workflows/packages.yml), which compiles the CLI with bun, apart from npm.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "@popcraft/cli version, without the leading v (e.g. 0.7.0)"
+        description: "popcraft version, without the leading v (e.g. 0.7.0)"
         required: true
         type: string
-  # Fired by the PopCraft release (getpopcraft/popcraft-app, .github/workflows/packages.yml) after npm publishes.
   # client_payload: { version: "0.7.0" }
   repository_dispatch:
     types: [release]
@@ -32,27 +33,89 @@ jobs:
           [ -n "$V" ] || { echo "no version provided" >&2; exit 1; }
           echo "version=${V#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Download the tarball and compute SHA256
-        id: sha
+      - name: Download the binaries and compute SHA256
+        id: shas
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.in.outputs.version }}
         run: |
           set -euo pipefail
-          URL="https://registry.npmjs.org/@popcraft/cli/-/cli-${VERSION}.tgz"
-          # npm can accept a publish minutes before it serves it: wait up to 30 minutes.
-          for i in $(seq 1 60); do curl -fsSL -o cli.tgz "$URL" && break; [ "$i" = 60 ] && { echo "::error::$URL is not served"; exit 1; }; sleep 30; done
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "sha=$(sha256sum cli.tgz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-          rm cli.tgz
+          mkdir -p /tmp/popcraft
+          for target in darwin-arm64 darwin-x64 linux-x64 linux-arm64; do
+            name="popcraft-${VERSION}-${target}.tar.gz"
+            gh release download "v${VERSION}" -R "$GITHUB_REPOSITORY" -p "$name" -D /tmp/popcraft --clobber
+            echo "${target//-/_}=$(sha256sum "/tmp/popcraft/${name}" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          done
 
-      - name: Update the formula
+      - name: Regenerate the formula
         env:
           VERSION: ${{ steps.in.outputs.version }}
-          URL: ${{ steps.sha.outputs.url }}
-          SHA: ${{ steps.sha.outputs.sha }}
+          BASE: https://github.com/${{ github.repository }}/releases/download/v${{ steps.in.outputs.version }}
+          SHA_DARWIN_ARM64: ${{ steps.shas.outputs.darwin_arm64 }}
+          SHA_DARWIN_X64: ${{ steps.shas.outputs.darwin_x64 }}
+          SHA_LINUX_X64: ${{ steps.shas.outputs.linux_x64 }}
+          SHA_LINUX_ARM64: ${{ steps.shas.outputs.linux_arm64 }}
         run: |
           set -euo pipefail
-          sed -i -E "s|^  url \".*\"|  url \"${URL}\"|; s|^  sha256 \".*\"|  sha256 \"${SHA}\"|" Formula/popcraft.rb
+          cat > Formula/popcraft.rb << 'FORMULA'
+          # typed: false
+          # frozen_string_literal: true
+
+          # The `popcraft` command line: one executable with the design kit inside (compiled with bun), no Node needed.
+          # npm has the same CLI as @popcraft/cli. Written by .github/workflows/update-formulas.yml; don't edit by hand.
+          class Popcraft < Formula
+            desc "Command-line for PopCraft: edit .popcraft files, call the API, publish plugins"
+            homepage "https://popcraft.app/docs/api/cli"
+            version "VERSION_PLACEHOLDER"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "BASE_PLACEHOLDER/popcraft-VERSION_PLACEHOLDER-darwin-arm64.tar.gz"
+                sha256 "SHA_DARWIN_ARM64_PLACEHOLDER"
+              end
+              if Hardware::CPU.intel?
+                url "BASE_PLACEHOLDER/popcraft-VERSION_PLACEHOLDER-darwin-x64.tar.gz"
+                sha256 "SHA_DARWIN_X64_PLACEHOLDER"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.arm?
+                url "BASE_PLACEHOLDER/popcraft-VERSION_PLACEHOLDER-linux-arm64.tar.gz"
+                sha256 "SHA_LINUX_ARM64_PLACEHOLDER"
+              end
+              if Hardware::CPU.intel?
+                url "BASE_PLACEHOLDER/popcraft-VERSION_PLACEHOLDER-linux-x64.tar.gz"
+                sha256 "SHA_LINUX_X64_PLACEHOLDER"
+              end
+            end
+
+            def install
+              bin.install "popcraft"
+            end
+
+            test do
+              assert_equal version.to_s, shell_output("#{bin}/popcraft --version").strip
+              system bin/"popcraft", "new", testpath/"t.popcraft", "--name", "Test"
+              assert_path_exists testpath/"t.popcraft"
+            end
+          end
+          FORMULA
+          sed -i -e 's/^          //' \
+            -e "s|VERSION_PLACEHOLDER|${VERSION}|g" \
+            -e "s|BASE_PLACEHOLDER|${BASE}|g" \
+            -e "s|SHA_DARWIN_ARM64_PLACEHOLDER|${SHA_DARWIN_ARM64}|g" \
+            -e "s|SHA_DARWIN_X64_PLACEHOLDER|${SHA_DARWIN_X64}|g" \
+            -e "s|SHA_LINUX_X64_PLACEHOLDER|${SHA_LINUX_X64}|g" \
+            -e "s|SHA_LINUX_ARM64_PLACEHOLDER|${SHA_LINUX_ARM64}|g" \
+            Formula/popcraft.rb
+
+      - name: Commit
+        env:
+          VERSION: ${{ steps.in.outputs.version }}
+        run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/popcraft.rb

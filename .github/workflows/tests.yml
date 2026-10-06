@@ -5,13 +5,24 @@ on:
   pull_request:
 jobs:
   formula:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel, ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
+      - name: Homebrew (Linux runners have it, but not on PATH)
+        if: runner.os == 'Linux'
+        run: |
+          [ -x /home/linuxbrew/.linuxbrew/bin/brew ] || NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
       - name: Tap this checkout
         run: |
           mkdir -p "$(brew --repository)/Library/Taps/getpopcraft"
           ln -s "$GITHUB_WORKSPACE" "$(brew --repository)/Library/Taps/getpopcraft/homebrew-popcraft"
-      - run: brew audit --strict --online getpopcraft/tap/popcraft
-      - run: brew install --build-from-source getpopcraft/tap/popcraft
-      - run: brew test getpopcraft/tap/popcraft
+      - run: brew audit --strict --online getpopcraft/popcraft/popcraft
+      - run: brew install getpopcraft/popcraft/popcraft
+      - run: popcraft --version && popcraft --help > /dev/null
+      - run: brew test getpopcraft/popcraft/popcraft
+      - run: brew uninstall popcraft && ! command -v popcraft
