@@ -10,23 +10,23 @@ class Popcraft < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.8.1/popcraft-1.8.1-darwin-arm64.tar.gz"
-      sha256 "37df6ff143d65781e2d84f6b48adea66673fd0495fee3b13828eabb68694be3b"
+      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.9.0/popcraft-1.9.0-darwin-arm64.tar.gz"
+      sha256 "440d2d08827cf8672bc02053dffd5abe2a006ac5dab6cec27ebc1907f3a4fe1c"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.8.1/popcraft-1.8.1-darwin-x64.tar.gz"
-      sha256 "094493d02309aa1183bc842aa7d3183557060fcda692c443e86372de57577dce"
+      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.9.0/popcraft-1.9.0-darwin-x64.tar.gz"
+      sha256 "ddc018d7f86eb6c06f485617eafdcbfbadd074c9a2f14489f8631771967c2bf8"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.8.1/popcraft-1.8.1-linux-arm64.tar.gz"
-      sha256 "4a6d2284c36cb47a644da508a814402fea7932269935ca7991c75678f056a13d"
+      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.9.0/popcraft-1.9.0-linux-arm64.tar.gz"
+      sha256 "4bdefd5f59b1197f7932c7cac51fff3554a7a239fcc9985217baed04c1865bac"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.8.1/popcraft-1.8.1-linux-x64.tar.gz"
-      sha256 "588111132f70796eec76a83c488100acba7c6f421734b0b2086cf8940da3c5f0"
+      url "https://github.com/getpopcraft/homebrew-popcraft/releases/download/v1.9.0/popcraft-1.9.0-linux-x64.tar.gz"
+      sha256 "1fd57d0450d971d383292ca5e39a42ffa2299700887934cc8d911e1d9e65495a"
     end
   end
 
